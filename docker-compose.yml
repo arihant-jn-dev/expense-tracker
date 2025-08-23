@@ -1,0 +1,39 @@
+
+# Use Docker Compose v3.8
+version: '3.8'
+
+services:
+  # Postgres database service
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: expenses_db      # Database name
+      POSTGRES_USER: user           # Database user
+      POSTGRES_PASSWORD: password   # Database password
+    ports:
+    - "5432:5432"                # Format: "host:container". Maps your computer's port 5432 (left) to the container's port 5432 (right).
+              # This lets you connect to Postgres from outside Docker (e.g., with a GUI or psql on your Mac).
+    volumes:
+      - pgdata:/var/lib/postgresql/data # Persist DB data
+
+  # Node.js API service
+  api:
+    build: .                       # Build from Dockerfile in current dir
+    environment:
+      DB_NAME: expenses_db
+      DB_USER: user
+      DB_PASSWORD: password
+      DB_HOST: db                  # Hostname of the db service
+      DB_PORT: 5432
+      PORT: 3000
+    ports:
+    - "3000:3000"                # Format: "host:container". Maps your computer's port 3000 (left) to the container's port 3000 (right).
+              # Lets you access the API at http://localhost:3000 in your browser or with curl/Postman.
+    depends_on:
+      - db                         # Wait for db to be ready
+
+# Named volume for Postgres data persistence
+volumes:
+  pgdata:
+  DB_HOST: db                  # Hostname of the db service. This is the internal Docker network name for the Postgres container.
+            # The API uses this to connect to the DB (not 'localhost' or '127.0.0.1').
